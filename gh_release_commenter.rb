@@ -48,7 +48,7 @@ class PullCommenter
   end
 
   def comment(issue_number, content)
-    @client.add_comment(repo, issue_number, content)
+    @client.add_comment(@repo, issue_number, content)
   end
 end
 
