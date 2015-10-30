@@ -56,11 +56,11 @@ def usage
   <<-USAGE.gsub(/^ {4}/, '')
   #{$0} - gathers a list of pull requests being deployed and makes a comment on each to indicate so
 
-    Usage: ruby #{$0} -r anthlam/gh-release-commenter -t origin/master -d .
+    Usage: ruby #{$0} -r <user/repo> -t <remote/branch> -d <repo local working dir>
 
     Options:
-      -r, --repo:     Github <user>/<repo> that contains code being deployed
-      -t, --target:   Github <remote>/<branch> that contains currently deployed code
+      -r, --repo:     Github <user/repo> that contains code being deployed
+      -t, --target:   Github <remote/branch> that contains currently deployed code
       -d, --dir:      OPTIONAL: Local working directory of the repo being deployed (default = .)
   USAGE
 end
