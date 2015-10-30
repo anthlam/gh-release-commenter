@@ -1,12 +1,11 @@
 require 'octokit'
 require 'git'
-require 'optparse'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
-MERGED_PR_MESSAGE="Merge pull request #"
-MERGED_PR_REGEX=/Merge pull request #(\d*)/i
 
-class DeployedPullFinder
+class MergedPullFinder
+  MERGED_PR_MESSAGE="Merge pull request #"
+  MERGED_PR_REGEX=/Merge pull request #(\d*)/i
 
   def initialize(working_dir, target)
     @working_dir = working_dir
@@ -34,11 +33,9 @@ class DeployedPullFinder
       c.message.scan(MERGED_PR_REGEX)
     end
   end
-
 end
 
 class PullCommenter
-
   def initialize(repo)
     @client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
     @repo = repo
@@ -53,7 +50,6 @@ class PullCommenter
   def comment(issue_number, content)
     @client.add_comment(repo, issue_number, content)
   end
-
 end
 
 def usage
@@ -70,6 +66,8 @@ def usage
 end
 
 def main(args)
+  require 'optparse'
+
   options = {}
 
   # default values
@@ -90,7 +88,7 @@ def main(args)
 
   # get list of PRs
   pr_nums = []
-  pr_nums = DeployedPullFinder.new(options[:dir], options[:target]).get_array_of_pr_nums
+  pr_nums = MergedPullFinder.new(options[:dir], options[:target]).get_array_of_pr_nums
 
   # comment on PRs
   PullCommenter.new(options[:repo]).comment(pr_nums)
