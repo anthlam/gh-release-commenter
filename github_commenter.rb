@@ -1,11 +1,12 @@
 require 'octokit'
 require 'git'
+require 'optparse'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 MERGED_PR_MESSAGE="Merge pull request #"
 MERGED_PR_REGEX=/Merge pull request #(\d*)/i
 
-class IssueFinder
+class DeployedPullFinder
 
   def initialize(working_dir, target)
     @working_dir = working_dir
@@ -36,13 +37,20 @@ class IssueFinder
 
 end
 
-class Commenter
+class PullCommenter
 
-  def initialize
+  def initialize(repo)
     @client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
+    @repo = repo
   end
 
-  def comment(repo, issue_number, content)
+  def add_comment_to_issues(issue_numbers)
+    issue_numbers.each do |issue|
+      comment(issue, 'This was deployed...')
+    end
+  end
+
+  def comment(issue_number, content)
     @client.add_comment(repo, issue_number, content)
   end
 
