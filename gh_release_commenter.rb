@@ -1,5 +1,6 @@
 require 'octokit'
 require 'git'
+require 'pry'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
@@ -15,13 +16,12 @@ class MergedPullFinder
   def get_array_of_pr_nums
     get_repo
     merge_commits = get_merge_commits_since_last_deploy
-    puts get_pr_ids(merge_commits)
+    get_pr_ids(merge_commits)
   end
 
   private
   def get_repo
     @repo = Git.open(@working_dir)
-    puts @repo.remotes
   end
 
   def get_merge_commits_since_last_deploy
@@ -31,7 +31,7 @@ class MergedPullFinder
   def get_pr_ids(commits)
     commits.map do |c|
       c.message.scan(MERGED_PR_REGEX)
-    end
+    end.flatten
   end
 end
 
@@ -47,6 +47,7 @@ class PullCommenter
     end
   end
 
+  private
   def comment(issue_number, content)
     @client.add_comment(@repo, issue_number, content)
   end
@@ -75,9 +76,9 @@ def main(args)
 
   # parse arguments
   parser = OptionParser.new do |opts|
-    opts.on('-r', '--repo') { |v| options[:repo] = v }
-    opts.on('-t', '--target') { |v| options[:target] = v }
-    opts.on('-d', '--dir') { |v| options[:dir] = v }
+    opts.on('-r', '--repo REPO') { |v| options[:repo] = v }
+    opts.on('-t', '--target TARGET') { |v| options[:target] = v }
+    opts.on('-d', '--dir DIR') { |v| options[:dir] = v }
   end
   parser.parse(args)
 
@@ -86,12 +87,15 @@ def main(args)
     Process::exit(1)
   end
 
+  binding.pry
+
   # get list of PRs
   pr_nums = []
-  pr_nums = MergedPullFinder.new(options[:dir], options[:target]).get_array_of_pr_nums
+  pr_nums = MergedPullFinder.new(options[:dir].to_s, options[:target].to_s).get_array_of_pr_nums
+
 
   # comment on PRs
-  PullCommenter.new(options[:repo]).comment(pr_nums)
+  PullCommenter.new(options[:repo]).add_comment_to_issues(pr_nums)
 end
 
 if __FILE__ == $0
