@@ -56,6 +56,46 @@ class PullCommenter
 
 end
 
-#IssueFinder.new('~/Projects/TTM/apangea', 'master').get_array_of_pr_nums
+def usage
+  <<-USAGE.gsub(/^ {4}/, '')
+  #{$0} - gathers a list of pull requests being deployed and makes a comment on each to indicate so
 
-Commenter.new.comment('anthlam/gi-web', 2, 'this is a test, this is only a test')
+    Usage: ruby #{$0} -r anthlam/gh-release-commenter -t origin/master -d .
+
+    Options:
+      -r, --repo:     Github <user>/<repo> that contains code being deployed
+      -t, --target:   Github <remote>/<branch> that contains currently deployed code
+      -d, --dir:      OPTIONAL: Local working directory of the repo being deployed (default = .)
+  USAGE
+end
+
+def main(args)
+  options = {}
+
+  # default values
+  options[:dir] = '.'
+
+  # parse arguments
+  parser = OptionParser.new do |opts|
+    opts.on('-r', '--repo') { |v| options[:repo] = v }
+    opts.on('-t', '--target') { |v| options[:target] = v }
+    opts.on('-d', '--dir') { |v| options[:dir] = v }
+  end
+  parser.parse(args)
+
+  unless options[:repo] && options[:dir] && options[:target]
+    $stderr.puts usage
+    Process::exit(1)
+  end
+
+  # get list of PRs
+  pr_nums = []
+  pr_nums = DeployedPullFinder.new(options[:dir], options[:target]).get_array_of_pr_nums
+
+  # comment on PRs
+  PullCommenter.new(options[:repo]).comment(pr_nums)
+end
+
+if __FILE__ == $0
+  main(ARGV)
+end
