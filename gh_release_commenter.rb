@@ -14,7 +14,7 @@ class MergedPullFinder
 
   def get_array_of_pr_nums
     get_repo
-    merge_commits = get_merge_commits_since_last_deploy
+    merge_commits = get_merge_commits_since_target
     get_pr_ids(merge_commits)
   end
 
@@ -23,7 +23,7 @@ class MergedPullFinder
     @repo = Git.open(@working_dir)
   end
 
-  def get_merge_commits_since_last_deploy
+  def get_merge_commits_since_target
     @repo.log.between(@target).grep(MERGED_PR_MESSAGE)
   end
 
