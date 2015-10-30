@@ -1,6 +1,5 @@
 require 'octokit'
 require 'git'
-require 'pry'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
@@ -86,8 +85,6 @@ def main(args)
     $stderr.puts usage
     Process::exit(1)
   end
-
-  binding.pry
 
   # get list of PRs
   pr_nums = []
