@@ -40,15 +40,15 @@ class PullCommenter
     @repo = repo
   end
 
-  def add_comment_to_issues(issue_numbers)
+  def add_comment_to_issues(issue_numbers, comment)
     issue_numbers.each do |issue|
-      comment(issue, 'This was deployed...')
+      comment(issue, comment)
     end
   end
 
   private
   def comment(issue_number, content)
-    @client.add_comment(@repo, issue_number, content)
+    @client.add_comment(@repo, issue_number, content.to_s)
   end
 end
 
@@ -56,12 +56,13 @@ def usage
   <<-USAGE.gsub(/^ {4}/, '')
   #{$0} - gathers a list of pull requests being deployed and makes a comment on each to indicate so
 
-    Usage: ruby #{$0} -r <user/repo> -t <remote/branch> -d <repo local working dir>
+    Usage: ruby #{$0} -r <user/repo> -t <remote/branch> -d <repo local working dir> -c <some comment>
 
     Options:
-      -r, --repo:     Github <user/repo> that contains code being deployed
-      -t, --target:   Github <remote/branch> that contains currently deployed code
+      -r, --repo:     Github <user/repo> that contains code being deployed.
+      -t, --target:   Github <remote/branch> that contains currently deployed code.
       -d, --dir:      OPTIONAL: Local working directory of the repo being deployed (default = .)
+      -c, --comment:  OPTIONAL: The comment you would like to post. (default = This was released)
   USAGE
 end
 
@@ -72,16 +73,18 @@ def main(args)
 
   # default values
   options[:dir] = '.'
+  options[:comment] = 'This was released.'
 
   # parse arguments
   parser = OptionParser.new do |opts|
-    opts.on('-r', '--repo REPO') { |v| options[:repo] = v }
-    opts.on('-t', '--target TARGET') { |v| options[:target] = v }
-    opts.on('-d', '--dir DIR') { |v| options[:dir] = v }
+    opts.on('-r', '--repo REPO')          { |v| options[:repo] = v }
+    opts.on('-t', '--target TARGET')      { |v| options[:target] = v }
+    opts.on('-d', '--dir DIR')            { |v| options[:dir] = v }
+    opts.on('-c', '--comment COMMENT')    { |v| options[:comment] = v }
   end
   parser.parse(args)
 
-  unless options[:repo] && options[:dir] && options[:target]
+  unless options[:repo] && options[:dir] && options[:target] && options[:comment]
     $stderr.puts usage
     Process::exit(1)
   end
@@ -92,7 +95,7 @@ def main(args)
 
 
   # comment on PRs
-  PullCommenter.new(options[:repo]).add_comment_to_issues(pr_nums)
+  PullCommenter.new(options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 end
 
 if __FILE__ == $0
