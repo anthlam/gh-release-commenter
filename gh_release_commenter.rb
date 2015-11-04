@@ -24,10 +24,12 @@ class MergedPullFinder
   end
 
   def get_merge_commits_since_target
+    puts "Diffing git log, searching for commits with '#{MERGED_PR_MESSAGE}'"
     @repo.log.between(@target).grep(MERGED_PR_MESSAGE)
   end
 
   def get_pr_ids(commits)
+    puts "Getting array of PR numbers from messages in list of commits"
     commits.map do |c|
       c.message.scan(MERGED_PR_REGEX)
     end.flatten
@@ -42,6 +44,7 @@ class PullCommenter
 
   def add_comment_to_issues(issue_numbers, comment)
     issue_numbers.each do |issue|
+      puts "Posting comment to ##{issue} in #{@repo}"
       comment(issue, comment)
     end
   end
@@ -90,11 +93,13 @@ def main(args)
   end
 
   # get list of PRs
+  puts "Retrieving list of Pull Requests that have been merged"
   pr_nums = []
   pr_nums = MergedPullFinder.new(options[:dir].to_s, options[:target].to_s).get_array_of_pr_nums
 
 
   # comment on PRs
+  puts "Leaving comment on each Pull Request"
   PullCommenter.new(options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 end
 
