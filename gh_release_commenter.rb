@@ -32,7 +32,7 @@ class MergedPullFinder
     puts "Getting array of PR numbers from messages in list of commits"
     commits.map do |c|
       c.message.scan(MERGED_PR_REGEX)
-    end.flatten
+    end.flatten.uniq
   end
 end
 
