@@ -14,7 +14,7 @@ class GhReleaseCommenterTest < Test::Unit::TestCase
       "merge Pull request #3 from hello to master"
     ]
 
-    actual = MergedPullFinder.new('who cares', 'blah').get_pr_ids(commit_messages)
+    actual = MergedPullFinder.new('who cares', 'blah').pr_numbers(commit_messages)
     expected = ["1", "2", "3"]
 
     assert_equal actual, expected

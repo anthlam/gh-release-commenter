@@ -12,29 +12,29 @@ class MergedPullFinder
     @target = target
   end
 
-  def get_array_of_pr_nums
-    get_repo
-    merge_commits = get_merge_commits_since_target
-    commit_messages = get_commit_messages(merge_commits)
-    get_pr_ids(commit_messages)
+  def array_of_pr_nums
+    repo
+    merge_commits = merge_commits_since_target
+    commit_messages = commit_messages(merge_commits)
+    pr_numbers(commit_messages)
   end
 
-  def get_repo
+  def repo
     @repo = Git.open(@working_dir)
   end
 
-  def get_merge_commits_since_target
+  def merge_commits_since_target
     puts "Diffing git log, searching for commits with '#{MERGED_PR_MESSAGE}'"
     @repo.log.between(@target).grep(MERGED_PR_MESSAGE)
   end
 
-  def get_commit_messages(commits)
+  def commit_messages(commits)
     commits.map do |c|
       c.message
     end
   end
 
-  def get_pr_ids(messages)
+  def pr_numbers(messages)
     puts "Getting array of PR numbers from messages in list of commits"
     messages.map do |m|
       m.scan(MERGED_PR_REGEX)
@@ -101,7 +101,7 @@ def main(args)
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged"
   pr_nums = []
-  pr_nums = MergedPullFinder.new(options[:dir].to_s, options[:target].to_s).get_array_of_pr_nums
+  pr_nums = MergedPullFinder.new(options[:dir].to_s, options[:target].to_s).array_of_pr_nums
 
 
   # comment on PRs
