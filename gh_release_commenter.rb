@@ -7,25 +7,20 @@ class MergedPullFinder
   MERGED_PR_MESSAGE="Merge pull request #"
   MERGED_PR_REGEX=/Merge pull request #(\d*)/i
 
-  def initialize(working_dir, target)
-    @working_dir = working_dir
-    @target = target
-  end
-
-  def array_of_pr_nums
-    repo
-    merge_commits = merge_commits_since_target
+  def array_of_pr_nums(working_dir, target)
+    repo(working_dir)
+    merge_commits = merge_commits_since_target(target)
     commit_messages = commit_messages(merge_commits)
     pr_numbers(commit_messages)
   end
 
-  def repo
-    @repo = Git.open(@working_dir)
+  def repo(working_dir)
+    @repo = Git.open(working_dir)
   end
 
-  def merge_commits_since_target
+  def merge_commits_since_target(target)
     puts "Diffing git log, searching for commits with '#{MERGED_PR_MESSAGE}'"
-    @repo.log.between(@target).grep(MERGED_PR_MESSAGE)
+    @repo.log.between(target).grep(MERGED_PR_MESSAGE)
   end
 
   def commit_messages(commits)
@@ -101,7 +96,7 @@ def main(args)
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged"
   pr_nums = []
-  pr_nums = MergedPullFinder.new(options[:dir].to_s, options[:target].to_s).array_of_pr_nums
+  pr_nums = MergedPullFinder.new.array_of_pr_nums(options[:dir].to_s, options[:target].to_s)
 
 
   # comment on PRs
