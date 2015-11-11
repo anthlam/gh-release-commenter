@@ -9,7 +9,7 @@ class MergedPullFinder
 
   def array_of_pr_nums(working_dir, target)
     repo(working_dir)
-    merge_commits = merge_commits_since_target(target)
+    merge_commits = merge_commits_since(target)
     commit_messages = commit_messages(merge_commits)
     pr_numbers(commit_messages)
   end
@@ -18,7 +18,7 @@ class MergedPullFinder
     @repo = Git.open(working_dir)
   end
 
-  def merge_commits_since_target(target)
+  def merge_commits_since(target)
     puts "Diffing git log, searching for commits with '#{MERGED_PR_MESSAGE}'"
     @repo.log.between(target).grep(MERGED_PR_MESSAGE)
   end
