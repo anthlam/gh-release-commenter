@@ -15,10 +15,10 @@ class MergedPullFinder
   def get_array_of_pr_nums
     get_repo
     merge_commits = get_merge_commits_since_target
-    get_pr_ids(merge_commits)
+    commit_messages = get_commit_messages(merge_commits)
+    get_pr_ids(commit_messages)
   end
 
-  private
   def get_repo
     @repo = Git.open(@working_dir)
   end
@@ -28,10 +28,16 @@ class MergedPullFinder
     @repo.log.between(@target).grep(MERGED_PR_MESSAGE)
   end
 
-  def get_pr_ids(commits)
-    puts "Getting array of PR numbers from messages in list of commits"
+  def get_commit_messages(commits)
     commits.map do |c|
-      c.message.scan(MERGED_PR_REGEX)
+      c.message
+    end
+  end
+
+  def get_pr_ids(messages)
+    puts "Getting array of PR numbers from messages in list of commits"
+    messages.map do |m|
+      m.scan(MERGED_PR_REGEX)
     end.flatten.uniq
   end
 end
