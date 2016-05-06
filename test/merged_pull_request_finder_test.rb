@@ -1,10 +1,12 @@
-require './gh_release_commenter'
+require '../lib/merged_pull_request_finder'
 require 'test/unit'
 
-class GhReleaseCommenterTest < Test::Unit::TestCase
+class MergedPullRequestFinderTest < Test::Unit::TestCase
+  def setup
+    @subject = MergedPullRequestFinder.new
+  end
 
   def test_duplicate_issue_numbers_are_removed
-
     commit_messages = [
       "This is just a random commit",
       "Merge pull request #1 from blah to master",
@@ -14,10 +16,9 @@ class GhReleaseCommenterTest < Test::Unit::TestCase
       "merge Pull request #3 from hello to master"
     ]
 
-    actual = MergedPullFinder.new.pr_numbers(commit_messages)
+    actual = @subject.pr_numbers(commit_messages)
     expected = ["1", "2", "3"]
 
     assert_equal actual, expected
-
   end
 end
