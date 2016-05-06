@@ -5,7 +5,7 @@ require 'git'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
-class MergedPullFinder
+class MergedPullRequestFinder
   MERGED_PR_MESSAGE="Merge pull request #"
   MERGED_PR_REGEX=/Merge pull request #(\d*)/i
 
@@ -39,7 +39,7 @@ class MergedPullFinder
   end
 end
 
-class PullCommenter
+class PullRequestCommenter
   def initialize(repo)
     @client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
     @repo = repo
@@ -98,12 +98,12 @@ def main(args)
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged"
   pr_nums = []
-  pr_nums = MergedPullFinder.new.array_of_pr_nums(options[:dir].to_s, options[:target].to_s)
+  pr_nums = MergedPullRequestFinder.new.array_of_pr_nums(options[:dir].to_s, options[:target].to_s)
 
 
   # comment on PRs
   puts "Leaving comment on each Pull Request"
-  PullCommenter.new(options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
+  PullRequestCommenter.new(options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 end
 
 if __FILE__ == $0
