@@ -1,10 +1,6 @@
-require 'octokit'
-
 class PullRequestCommenter
-  GITHUB_TOKEN = ENV['GITHUB_TOKEN']
-
-  def initialize(repo)
-    @client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
+  def initialize(client, repo)
+    @client = client
     @repo = repo
   end
 
@@ -16,6 +12,7 @@ class PullRequestCommenter
   end
 
   private
+
   def comment(issue_number, content)
     @client.add_comment(@repo, issue_number, content.to_s)
   end

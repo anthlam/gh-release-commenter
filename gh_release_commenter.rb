@@ -1,7 +1,11 @@
 #!/usr/bin/env ruby
 
+require 'git'
+require 'octokit'
 require './lib/merged_pull_request_finder'
 require './lib/pull_request_commenter'
+
+GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
 def usage
   <<-USAGE.gsub(/^ {4}/, '')
@@ -11,7 +15,7 @@ def usage
 
     Options:
       -r, --repo:     Github <user/repo> that contains code being deployed.
-      -t, --target:   Github <remote/branch> that contains currently deployed code.
+      -t, --target:   Github <remote/branch or sha> that contains currently deployed code.
       -d, --dir:      OPTIONAL: Local working directory of the repo being deployed (default = .)
       -c, --comment:  OPTIONAL: The comment you would like to post. (default = This was released)
   USAGE
@@ -42,13 +46,15 @@ def main(args)
 
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged"
+  repo = Git.open(options[:dir].to_s)
   pr_nums = []
-  pr_nums = MergedPullRequestFinder.new.array_of_pr_nums(options[:dir].to_s, options[:target].to_s)
+  pr_nums = MergedPullRequestFinder.new(repo, options[:target].to_s).merged_pr_numbers
 
 
   # comment on PRs
   puts "Leaving comment on each Pull Request"
-  PullRequestCommenter.new(options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
+  octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
+  PullRequestCommenter.new(octokit_client, options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 end
 
 if __FILE__ == $0
