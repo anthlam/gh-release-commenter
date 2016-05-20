@@ -2,8 +2,8 @@
 
 require 'git'
 require 'octokit'
-require './lib/merged_pull_request_finder'
-require './lib/pull_request_commenter'
+require_relative 'lib/merged_pull_request_finder'
+require_relative 'lib/pull_request_commenter'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
