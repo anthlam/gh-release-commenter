@@ -1,7 +1,7 @@
 #!/usr/bin/env ruby
 
 require 'octokit'
-require_relative 'lib/merged_pull_request_finder'
+require_relative 'lib/pull_request_finder'
 require_relative 'lib/pull_request_commenter'
 
 GITHUB_TOKEN = ENV['GITHUB_TOKEN']
@@ -37,13 +37,15 @@ def main(args)
     Process::exit(1)
   end
 
+  # regex for finding merged pull requests
+  merged_pr_regex = /Merge pull request #(\d*)/i
+
   # setup octokit client
   octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
 
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged since #{options[:target]}"
-  pr_nums = []
-  pr_nums = MergedPullRequestFinder.new(octokit_client, options[:repo].to_s, options[:target].to_s).merged_pr_numbers
+  pr_nums = PullRequestFinder.new(octokit_client, options[:repo].to_s, options[:target].to_s, merged_pr_regex).pr_numbers
 
   # comment on PRs
   puts "Leaving comment on each Pull Request"

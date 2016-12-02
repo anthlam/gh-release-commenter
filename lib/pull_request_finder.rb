@@ -1,17 +1,17 @@
-class MergedPullRequestFinder
-  MERGED_PR_REGEX=/Merge pull request #(\d*)/i
+class PullRequestFinder
 
-  def initialize(octokit_client, repo_name, target_sha)
+  def initialize(octokit_client, repo_name, target_sha, search_regex)
     @client = octokit_client
     @repo = repo_name
     @target = target_sha
+    @regex = search_regex
   end
 
-  def merged_pr_numbers
+  def pr_numbers
     puts "Getting PR numbers from commit messages"
 
-    merge_commit_messages_since_target.map do |m|
-      m.scan(MERGED_PR_REGEX)
+    matching_commit_messages_since_target.map do |m|
+      m.scan(@regex)
     end
       .flatten
       .uniq
@@ -19,10 +19,10 @@ class MergedPullRequestFinder
 
   private
 
-  def merge_commit_messages_since_target
+  def matching_commit_messages_since_target
     commits_since_target
       .map { |c| c.commit.message }
-      .grep(MERGED_PR_REGEX)
+      .grep(@regex)
   end
 
   def commits_since_target
