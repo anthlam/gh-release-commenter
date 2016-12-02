@@ -1,6 +1,5 @@
 #!/usr/bin/env ruby
 
-require 'git'
 require 'octokit'
 require_relative 'lib/merged_pull_request_finder'
 require_relative 'lib/pull_request_commenter'
@@ -44,16 +43,16 @@ def main(args)
     Process::exit(1)
   end
 
+  # setup octokit client
+  octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
+
   # get list of PRs
   puts "Retrieving list of Pull Requests that have been merged"
-  repo = Git.open(options[:dir].to_s)
   pr_nums = []
-  pr_nums = MergedPullRequestFinder.new(repo, options[:target].to_s).merged_pr_numbers
-
+  pr_nums = MergedPullRequestFinder.new(octokit_client, options[:repo].to_s, options[:target].to_s).merged_pr_numbers
 
   # comment on PRs
   puts "Leaving comment on each Pull Request"
-  octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
   PullRequestCommenter.new(octokit_client, options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 end
 
