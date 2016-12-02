@@ -8,15 +8,14 @@ GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
 def usage
   <<-USAGE.gsub(/^ {4}/, '')
-  #{$0} - gathers a list of pull requests being deployed and makes a comment on each to indicate so
+  #{$0} - gathers a list of merged pull requests since some target branch or sha, and makes a comment on each
 
-    Usage: ruby #{$0} -r <user/repo> -t <remote/branch> -d <repo local working dir> -c <some comment>
+    Usage: ruby #{$0} -r <user/repo> -t <remote/branch or sha> -c <some comment>
 
     Options:
       -r, --repo:     Github <user/repo> that contains code being deployed.
       -t, --target:   Github <remote/branch or sha> that contains currently deployed code.
-      -d, --dir:      OPTIONAL: Local working directory of the repo being deployed (default = .)
-      -c, --comment:  OPTIONAL: The comment you would like to post. (default = This was released)
+      -c, --comment:  The comment you would like to post.
   USAGE
 end
 
@@ -25,20 +24,15 @@ def main(args)
 
   options = {}
 
-  # default values
-  options[:dir] = '.'
-  options[:comment] = 'This was released.'
-
   # parse arguments
   parser = OptionParser.new do |opts|
     opts.on('-r', '--repo REPO')          { |v| options[:repo] = v }
     opts.on('-t', '--target TARGET')      { |v| options[:target] = v }
-    opts.on('-d', '--dir DIR')            { |v| options[:dir] = v }
     opts.on('-c', '--comment COMMENT')    { |v| options[:comment] = v }
   end
   parser.parse(args)
 
-  unless options[:repo] && options[:dir] && options[:target] && options[:comment]
+  unless options[:repo] && options[:target] && options[:comment]
     $stderr.puts usage
     Process::exit(1)
   end
@@ -47,7 +41,7 @@ def main(args)
   octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
 
   # get list of PRs
-  puts "Retrieving list of Pull Requests that have been merged"
+  puts "Retrieving list of Pull Requests that have been merged since #{options[:target]}"
   pr_nums = []
   pr_nums = MergedPullRequestFinder.new(octokit_client, options[:repo].to_s, options[:target].to_s).merged_pr_numbers
 
