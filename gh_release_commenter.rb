@@ -10,11 +10,11 @@ def usage
   <<-USAGE.gsub(/^ {4}/, '')
   #{$0} - gathers a list of merged pull requests since some target branch or sha, and makes a comment on each
 
-    Usage: ruby #{$0} -r <user/repo> -t <remote/branch or sha> -c <some comment>
+    Usage: ruby #{$0} -r <user/repo> -t <sha> -c <some comment>
 
     Options:
       -r, --repo:     Github <user/repo> that contains code being deployed.
-      -t, --target:   Github <remote/branch or sha> that contains currently deployed code.
+      -t, --target:   Github <sha> of commit that is the starting point for searching for merge commits.
       -c, --comment:  The comment you would like to post.
   USAGE
 end
