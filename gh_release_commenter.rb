@@ -11,13 +11,13 @@ def usage
   <<-USAGE.gsub(/^ {4}/, '')
   #{$0} - gathers a list of merged pull requests since some target branch or sha, and makes a comment on each
 
-    Usage: ruby #{$0} -r <user/repo> -t <sha> -c <some comment> -t <tag name>
+    Usage: ruby #{$0} -r <user/repo> -s <sha> -c <some comment> -t <tag name>
 
     Options:
       -c, --comment:  The comment you would like to post.
       -r, --repo:     Github <user/repo> that contains code being deployed.
       -s, --sha:      Github <sha> of commit that is the starting point for searching for merge commits.
-      -t, --tag:      Name of tag you would like to apply to parent of RC to master merge commit.
+      -t, --tag:      (Optional) Name of tag you would like to apply to parent of RC to master merge commit.
   USAGE
 end
 
@@ -35,27 +35,20 @@ def main(args)
   end
   parser.parse(args)
 
-  unless options[:repo] && options[:target] && options[:comment] && options[:tag]
+  unless options[:repo] && options[:sha] && options[:comment]
     $stderr.puts usage
     Process::exit(1)
   end
 
-  # regex for finding merged pull requests
-  merged_pr_regex = /Merge pull request #(\d*)/i
-
-  # setup octokit client
   octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
 
-  # get list of PRs
-  puts "Retrieving list of Pull Requests that have been merged since #{options[:sha]}"
+  merged_pr_regex = /Merge pull request #(\d*)/i
+  puts "Retrieving list of pull requests that have been merged since #{options[:sha]}"
   pr_nums = PullRequestFinder.new(octokit_client, options[:repo].to_s, options[:sha].to_s, merged_pr_regex).pr_numbers
-
-  # comment on PRs
-  puts "Leaving comment on each Pull Request"
+  puts "Leaving comment '#{options[:comment]}' on pull requests: #{pr_nums.join(', ')}"
   PullRequestCommenter.new(octokit_client, options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 
-  # tag last commit on default branch
-  CommitTagger.new(octokit_client, options[:repo], 'master').add_tag_to_commit(options[:tag])
+  CommitTagger.new(octokit_client, options[:repo], 'master').add_tag_to_commit(options[:tag]) if options[:tag]
 end
 
 if __FILE__ == $0

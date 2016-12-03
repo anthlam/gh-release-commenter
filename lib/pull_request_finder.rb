@@ -1,5 +1,4 @@
 class PullRequestFinder
-
   def initialize(octokit_client, repo_name, target_sha, search_regex)
     @client = octokit_client
     @repo = repo_name
