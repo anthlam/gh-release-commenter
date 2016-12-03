@@ -9,15 +9,18 @@ GITHUB_TOKEN = ENV['GITHUB_TOKEN']
 
 def usage
   <<-USAGE.gsub(/^ {4}/, '')
-  #{$0} - gathers a list of merged pull requests since some target branch or sha, and makes a comment on each
 
-    Usage: ruby #{$0} -r <user/repo> -s <sha> -c <some comment> -t <tag name>
+  #{$0} - gathers a list of Github merged pull requests since some target sha, and makes a comment on each.
+  Also has the optional capability of tagging a specific commit.
 
-    Options:
-      -c, --comment:  The comment you would like to post.
-      -r, --repo:     Github <user/repo> that contains code being deployed.
-      -s, --sha:      Github <sha> of commit that is the starting point for searching for merge commits.
-      -t, --tag:      (Optional) Name of tag you would like to apply to parent of RC to master merge commit.
+  Usage: ruby #{$0} -r <user/repo> --comment_sha <sha> -c <some comment> [-t <tag name> --tag_sha <sha>]
+
+  Options:
+  -c,  --comment:  The comment you would like to post on pull requests.
+  -r,  --repo:     User/repo that contains code being deployed.
+  --comment_sha:   Sha of commit that begins range of search for merge commits between then and now.
+  -t,  --tag:      (Optional) Name of tag you would like to apply to commit. NO SPACES ALLOWED.
+  --tag_sha:       (Optional if tag not set) Sha of commit that you would like to tag.
   USAGE
 end
 
@@ -26,16 +29,28 @@ def main(args)
 
   options = {}
 
-  # parse arguments
   parser = OptionParser.new do |opts|
-    opts.on('-c', '--comment COMMENT')     { |v| options[:comment] = v }
-    opts.on('-r', '--repo REPO_FULL_NAME') { |v| options[:repo] = v }
-    opts.on('-s', '--sha TARGET_SHA')      { |v| options[:sha] = v }
-    opts.on('-t', '--tag TAG_NAME')        { |v| options[:tag] = v }
+    opts.on('-c', '--comment COMMENT')      { |v| options[:comment] = v }
+    opts.on('-r', '--repo REPO_FULL_NAME')  { |v| options[:repo] = v }
+    opts.on('--comment_sha COMMENT_SHA')    { |v| options[:comment_sha] = v }
+    opts.on('-t', '--tag TAG_NAME')         { |v| options[:tag] = v }
+    opts.on('--tag_sha TAG_SHA')            { |v| options[:tag_sha] = v }
   end
   parser.parse(args)
 
-  unless options[:repo] && options[:sha] && options[:comment]
+  unless options[:repo] && options[:comment_sha] && options[:comment]
+    $stderr.puts usage
+    Process::exit(1)
+  end
+
+  if (options[:tag] && !options[:tag_sha]) || (!options[:tag] && options[:tag_sha])
+    puts "  ERROR: --tag and --tag_sha must both be set"
+    $stderr.puts usage
+    Process::exit(1)
+  end
+
+  if options[:tag] =~ /\s/
+    puts "  ERROR: --tag may not contain spaces"
     $stderr.puts usage
     Process::exit(1)
   end
@@ -43,12 +58,15 @@ def main(args)
   octokit_client = Octokit::Client.new(:access_token => GITHUB_TOKEN)
 
   merged_pr_regex = /Merge pull request #(\d*)/i
-  puts "Retrieving list of pull requests that have been merged since #{options[:sha]}"
-  pr_nums = PullRequestFinder.new(octokit_client, options[:repo].to_s, options[:sha].to_s, merged_pr_regex).pr_numbers
+  puts "Retrieving list of pull requests that have been merged since #{options[:comment_sha]}"
+  pr_nums = PullRequestFinder.new(octokit_client, options[:repo].to_s, options[:comment_sha].to_s, merged_pr_regex).pr_numbers
   puts "Leaving comment '#{options[:comment]}' on pull requests: #{pr_nums.join(', ')}"
   PullRequestCommenter.new(octokit_client, options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 
-  CommitTagger.new(octokit_client, options[:repo], 'master').add_tag_to_commit(options[:tag]) if options[:tag]
+  if options[:tag] && options[:tag_sha]
+    puts "Tagging commit #{options[:tag_sha]}"
+    CommitTagger.new(octokit_client, options[:repo]).add_tag_to_commit(options[:tag], options[:tag_sha])
+  end
 end
 
 if __FILE__ == $0
