@@ -39,18 +39,19 @@ def main(args)
   parser.parse(args)
 
   unless options[:repo] && options[:comment_sha] && options[:comment]
+    puts "  ERROR: --repo, --comment_sha, and --comment are required!"
     $stderr.puts usage
     Process::exit(1)
   end
 
   if (options[:tag] && !options[:tag_sha]) || (!options[:tag] && options[:tag_sha])
-    puts "  ERROR: --tag and --tag_sha must both be set"
+    puts "  ERROR: --tag and --tag_sha must both be set!"
     $stderr.puts usage
     Process::exit(1)
   end
 
   if options[:tag] =~ /\s/
-    puts "  ERROR: --tag may not contain spaces"
+    puts "  ERROR: --tag may not contain spaces!"
     $stderr.puts usage
     Process::exit(1)
   end
