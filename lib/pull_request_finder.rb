@@ -7,8 +7,6 @@ class PullRequestFinder
   end
 
   def pr_numbers
-    puts "Getting PR numbers from commit messages"
-
     matching_commit_messages_since_target.map do |m|
       m.scan(@regex)
     end
