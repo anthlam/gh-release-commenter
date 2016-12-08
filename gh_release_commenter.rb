@@ -38,13 +38,13 @@ def main(args)
   end
   parser.parse(args)
 
-  unless options[:repo] && options[:comment_sha] && options[:comment]
+  if (options[:repo].nil? || options[:repo].empty?) || (options[:comment_sha].nil? || options[:comment_sha].empty?) || (options[:comment].nil? || options[:comment].empty?)
     puts "  ERROR: --repo, --comment_sha, and --comment are required!"
     $stderr.puts usage
     Process::exit(1)
   end
 
-  if (options[:tag] && !options[:tag_sha]) || (!options[:tag] && options[:tag_sha])
+  if (!options[:tag].nil? && (options[:tag_sha].nil? || options[:tag_sha].empty?)) || ((options[:tag].nil? || options[:tag].empty?) && !options[:tag_sha].nil?)
     puts "  ERROR: --tag and --tag_sha must both be set!"
     $stderr.puts usage
     Process::exit(1)
@@ -64,7 +64,7 @@ def main(args)
   puts "Leaving comment '#{options[:comment]}' on pull requests: #{pr_nums.join(', ')}"
   PullRequestCommenter.new(octokit_client, options[:repo]).add_comment_to_issues(pr_nums, options[:comment])
 
-  if options[:tag] && options[:tag_sha] && !options[:tag].empty? && !options[:tag_sha].empty?
+  if options[:tag] && options[:tag_sha]
     puts "Tagging commit #{options[:tag_sha]}"
     CommitTagger.new(octokit_client, options[:repo]).add_tag_to_commit(options[:tag], options[:tag_sha])
   end
